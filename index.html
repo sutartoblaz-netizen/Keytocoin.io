@@ -1,0 +1,837 @@
+
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07110d">
+<title>KEYTOCOIN Testnet Miner</title>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="./config.js"></script>
+
+<style>
+:root {
+  color-scheme: dark;
+  --green: #58e68b;
+  --gold: #e9bd55;
+  --border: #1f6b42;
+  --panel: rgba(13,28,21,.91);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #07110d;
+  color: #d9ffe8;
+  font: 15px ui-monospace,monospace;
+  overflow-x: hidden;
+}
+
+#ktcCoinRain {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+main {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin: auto;
+  padding: 20px 16px 40px;
+}
+
+header {
+  text-align: center;
+  padding: 20px 5px;
+}
+
+.logo {
+  color: var(--gold);
+  font-size: 38px;
+  font-weight: 900;
+  letter-spacing: 5px;
+  text-shadow: 0 0 18px #d99a2455;
+}
+
+.subtitle {
+  color: var(--green);
+  font-size: 11px;
+  letter-spacing: 3px;
+}
+
+.card {
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin: 14px 0;
+  box-shadow: 0 5px 25px #0005;
+}
+
+.card-title {
+  color: var(--gold);
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.muted {
+  color: #91b6a0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+button, input, textarea {
+  font: inherit;
+  border-radius: 8px;
+  padding: 12px;
+  background: #10271b;
+  color: #d9ffe8;
+  border: 1px solid #28784b;
+  width: 100%;
+  margin: 7px 0;
+}
+
+button {
+  background: linear-gradient(120deg,#145c32,#198047);
+  font-weight: bold;
+  cursor: pointer;
+  transition: .2s;
+}
+
+button:active {
+  transform: scale(.98);
+}
+
+button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+textarea {
+  resize: vertical;
+}
+
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #06100b;
+  border: 1px solid #193c28;
+  padding: 12px;
+  border-radius: 8px;
+  color: #bce8ca;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.ok { color: #67ef9b; }
+.err { color: #ff8585; }
+
+label {
+  display: block;
+  margin-top: 10px;
+  color: #9ddbb4;
+  font-size: 12px;
+}
+
+.footer {
+  text-align: center;
+  padding: 20px 5px;
+  color: #789684;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #58e68b;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #58e68b;
+  margin-right: 5px;
+}
+
+@media(max-width:480px) {
+  main { padding: 12px; }
+  .logo { font-size: 30px; }
+  .card { padding: 13px; }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  * { scroll-behavior: auto !important; }
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="ktcCoinRain" aria-hidden="true"></canvas>
+
+<main>
+
+<header>
+  <div class="logo">KEYTOCOIN</div>
+  <div class="subtitle">DECENTRALIZED CPU MINING</div>
+  <p class="muted">
+    <span class="status-dot"></span>
+    SEPOLIA TESTNET ONLY
+  </p>
+</header>
+
+<div class="card">
+  <div class="card-title">1. CONNECT WALLET</div>
+  <button id="connect">Connect MetaMask / EVM Wallet</button>
+  <pre id="wallet">Wallet not connected</pre>
+</div>
+
+<div class="card">
+  <div class="card-title">2. INDEPENDENT ATTESTORS</div>
+  <label>Masukkan minimal 3 URL HTTPS attestor independen</label>
+  <textarea id="urls" rows="4"
+    placeholder="https://attestor-1.example/attest&#10;https://attestor-2.example/attest&#10;https://attestor-3.example/attest"></textarea>
+  <p class="muted">
+    Setiap operator harus menjalankan server attestor sendiri.
+    Jangan gunakan beberapa URL yang dikendalikan operator yang sama.
+  </p>
+</div>
+
+<div class="card">
+  <div class="card-title">3. CPU PROOF OF WORK</div>
+  <button id="mine" disabled>START CPU MINING</button>
+  <button id="stopMine" disabled>STOP MINING</button>
+  <pre id="pow">Waiting for wallet...</pre>
+</div>
+
+<div class="card">
+  <div class="card-title">4. CLAIM MINING REWARD</div>
+  <button id="claim" disabled>
+    COLLECT 3-OF-5 ATTESTATIONS
+  </button>
+  <pre id="status">Connect wallet to begin.</pre>
+</div>
+
+<div class="card">
+  <div class="card-title">SECURITY NOTICE</div>
+  <p class="muted">
+    This is experimental testnet software. Verify the mining
+    contract address and network independently. Never enter
+    your seed phrase or private key into this application.
+    AI Security Core does not have wallet signing authority.
+  </p>
+</div>
+
+<div class="footer">
+  KEYTOCOIN COMMUNITY PROJECT<br>
+  EXPERIMENTAL SEPOLIA TESTNET<br>
+  NOT MAINNET • TEST TOKENS HAVE NO MONETARY VALUE
+</div>
+
+</main>
+
+<script>
+/* TELEGRAM MINI APP */
+window.Telegram?.WebApp?.ready();
+window.Telegram?.WebApp?.expand();
+
+/* APP STATE */
+const $ = id => document.getElementById(id);
+
+let provider;
+let walletProvider;
+let signer;
+let wallet;
+let mining;
+let epoch;
+let nonce;
+let proofHash;
+let deadline;
+let worker;
+let workerUrl;
+
+const ABI = [
+  'function currentEpoch() view returns(uint256)',
+  'function nonces(address) view returns(uint256)',
+  'function calculateProof(address,uint256,uint256) view returns(bytes32)',
+  'function powTarget() view returns(uint256)',
+  'function claim(uint256,uint256,uint256,bytes32,bytes[])'
+];
+
+const CHAIN = '0xaa36a7';
+
+let addr = localStorage.getItem('KTC_MINING_ADDRESS');
+
+if (!addr) {
+  addr = prompt(
+    'Paste verified KTC mining contract address (Sepolia):',
+    ''
+  );
+
+  if (addr) {
+    try {
+      addr = ethers.getAddress(addr);
+      localStorage.setItem('KTC_MINING_ADDRESS', addr);
+    } catch {
+      alert('Invalid contract address.');
+      addr = null;
+    }
+  }
+}
+
+function log(message, error = false) {
+  $('status').textContent = message;
+  $('status').className = error ? 'err' : 'ok';
+}
+
+/* CONNECT WALLET */
+async function connect() {
+  if (!addr) throw Error('Configure a verified mining contract address.');
+
+  if (!walletProvider) {
+    if (window.ethereum) {
+      walletProvider = window.ethereum;
+    } else {
+      const projectId = window.KTC_CONFIG?.walletConnectProjectId;
+
+      if (!projectId || projectId.includes('PASTE_')) {
+        throw Error('Configure WalletConnect project ID in config.js.');
+      }
+
+      const EthereumProvider =
+        (await import(
+          'https://esm.sh/@walletconnect/ethereum-provider@2.17.0'
+        )).default;
+
+      walletProvider = await EthereumProvider.init({
+        projectId,
+        chains: [11155111],
+        showQrModal: true,
+        methods: [
+          'eth_chainId',
+          'eth_accounts',
+          'eth_requestAccounts',
+          'eth_sendTransaction',
+          'personal_sign',
+          'eth_signTypedData_v4',
+          'wallet_switchEthereumChain'
+        ],
+        events: ['chainChanged', 'accountsChanged'],
+        metadata: {
+          name: 'KEYTOCOIN Testnet Miner',
+          description: 'KEYTOCOIN Sepolia CPU mining',
+          url: location.origin,
+          icons: []
+        }
+      });
+
+      await walletProvider.connect();
+    }
+  }
+
+  provider = new ethers.BrowserProvider(walletProvider);
+
+  await provider.send('eth_requestAccounts', []);
+
+  let net = await provider.getNetwork();
+
+  if (net.chainId !== 11155111n) {
+    await walletProvider.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: CHAIN }]
+    });
+
+    provider = new ethers.BrowserProvider(walletProvider);
+    net = await provider.getNetwork();
+  }
+
+  if (net.chainId !== 11155111n) {
+    throw Error('Please switch to Sepolia network.');
+  }
+
+  signer = await provider.getSigner();
+  wallet = await signer.getAddress();
+
+  mining = new ethers.Contract(
+    ethers.getAddress(addr),
+    ABI,
+    signer
+  );
+
+  $('wallet').textContent =
+    `${wallet}\nChain ID: 11155111\nMining: ${addr}`;
+
+  $('mine').disabled = false;
+
+  log('Wallet connected. Confirm Sepolia test ETH is available.');
+}
+
+$('connect').onclick = () =>
+  connect().catch(e => log(e.message, true));
+
+/* CPU MINING WORKER */
+function stopMining() {
+  if (worker) {
+    worker.terminate();
+    worker = null;
+  }
+
+  if (workerUrl) {
+    URL.revokeObjectURL(workerUrl);
+    workerUrl = null;
+  }
+
+  $('mine').disabled = !mining;
+  $('stopMine').disabled = true;
+}
+
+$('stopMine').onclick = () => {
+  stopMining();
+  $('pow').textContent = 'Mining stopped.';
+};
+
+$('mine').onclick = async () => {
+  try {
+    if (!mining) await connect();
+
+    stopMining();
+
+    $('claim').disabled = true;
+    proofHash = null;
+
+    epoch = await mining.currentEpoch();
+    nonce = await mining.nonces(wallet);
+
+    const target = await mining.powTarget();
+    const chain = await provider.getNetwork();
+
+    const workerCode = `
+      importScripts(
+        'https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js'
+      );
+
+      onmessage = e => {
+        const {
+          chainId, contract, wallet, epoch, nonce, target
+        } = e.data;
+
+        let n = BigInt(nonce);
+        const max = BigInt(target);
+        const coder = ethers.AbiCoder.defaultAbiCoder();
+
+        function go() {
+          for (let i = 0; i < 5000; i++, n++) {
+            const enc = coder.encode(
+              ['uint256','address','address','uint256','uint256'],
+              [chainId,contract,wallet,epoch,n]
+            );
+
+            const h = ethers.keccak256(enc);
+
+            if (BigInt(h) <= max) {
+              postMessage({
+                found: true,
+                nonce: n.toString(),
+                hash: h
+              });
+              return;
+            }
+          }
+
+          postMessage({progress:n.toString()});
+          setTimeout(go, 0);
+        }
+
+        go();
+      };
+    `;
+
+    const blob = new Blob(
+      [workerCode],
+      { type: 'text/javascript' }
+    );
+
+    workerUrl = URL.createObjectURL(blob);
+    worker = new Worker(workerUrl);
+
+    $('mine').disabled = true;
+    $('stopMine').disabled = false;
+
+    $('pow').textContent =
+      `Mining epoch ${epoch}, wallet nonce ${nonce}...`;
+
+    worker.onmessage = e => {
+      if (e.data.found) {
+        proofHash = e.data.hash;
+        window.ktcNonce = e.data.nonce;
+
+        $('pow').textContent =
+          `PROOF FOUND\nnonce=${e.data.nonce}\nhash=${proofHash}`;
+
+        $('claim').disabled = false;
+
+        stopMining();
+      } else {
+        $('pow').textContent =
+          `Trying nonce ${e.data.progress}...`;
+      }
+    };
+
+    worker.onerror = e => {
+      stopMining();
+      $('pow').textContent = 'Mining worker error: ' + e.message;
+    };
+
+    worker.postMessage({
+      chainId: chain.chainId.toString(),
+      contract: ethers.getAddress(addr),
+      wallet,
+      epoch: epoch.toString(),
+      nonce: nonce.toString(),
+      target: target.toString()
+    });
+
+  } catch (e) {
+    stopMining();
+    log(e.message, true);
+  }
+};
+
+/* CLAIM REWARD */
+$('claim').onclick = async () => {
+  try {
+    if (!mining || !signer) {
+      throw Error('Connect wallet first.');
+    }
+
+    if (!proofHash || !window.ktcNonce) {
+      throw Error('Mine a valid proof first.');
+    }
+
+    const tg = window.Telegram?.WebApp;
+    const initData = tg?.initData || '';
+
+    if (!initData) {
+      throw Error('Open this Mini App from Telegram.');
+    }
+
+    const params = new URLSearchParams(initData);
+
+    let tgUser;
+
+    try {
+      tgUser = JSON.parse(params.get('user') || 'null');
+    } catch {}
+
+    if (!tgUser?.id) {
+      throw Error('Telegram user ID unavailable.');
+    }
+
+    const urls = $('urls').value
+      .split(/\n/)
+      .map(x => x.trim())
+      .filter(Boolean);
+
+    if (urls.length < 3) {
+      throw Error('Enter at least 3 independent attestor URLs.');
+    }
+
+    for (const url of urls) {
+      const parsed = new URL(url);
+
+      if (parsed.protocol !== 'https:') {
+        throw Error('All attestor URLs must use HTTPS.');
+      }
+    }
+
+    deadline = Math.floor(Date.now() / 1000) + 240;
+
+    const message = [
+      'KEYTOCOIN TESTNET MINING CLAIM',
+      'Chain ID: 11155111',
+      `Mining contract: ${ethers.getAddress(addr)}`,
+      `Wallet: ${wallet}`,
+      `Telegram user ID: ${tgUser.id}`,
+      `Epoch: ${epoch}`,
+      `Nonce: ${window.ktcNonce}`,
+      `Proof hash: ${proofHash}`,
+      `Deadline: ${deadline}`,
+      'This signature links this Telegram account to this wallet for this claim only.',
+      'It does not authorize token transfers.'
+    ].join('\n');
+
+    const walletSignature = await signer.signMessage(message);
+
+    log('Requesting independent attestations...');
+
+    const payload = {
+      initData,
+      wallet,
+      walletSignature,
+      epoch: epoch.toString(),
+      nonce: String(window.ktcNonce),
+      deadline,
+      proofHash
+    };
+
+    const results = await Promise.allSettled(
+      urls.map(async url => {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.ok) {
+          throw Error(
+            result.error || `Attestor HTTP ${response.status}`
+          );
+        }
+
+        return result;
+      })
+    );
+
+    const good = results
+      .filter(x => x.status === 'fulfilled')
+      .map(x => x.value);
+
+    if (good.length < 3) {
+      throw Error(
+        `Only ${good.length} attestor(s) approved. Need 3.`
+      );
+    }
+
+    const signatures = good.map(x => ({
+      address: ethers.getAddress(x.attestor),
+      signature: x.signature
+    })).sort((a, b) =>
+      a.address.toLowerCase().localeCompare(
+        b.address.toLowerCase()
+      )
+    );
+
+    const unique = new Set(
+      signatures.map(x => x.address.toLowerCase())
+    );
+
+    if (unique.size < 3) {
+      throw Error('Duplicate attestor signer identities.');
+    }
+
+    const chosen = signatures
+      .slice(0, 3)
+      .map(x => x.signature);
+
+    log('Submitting claim transaction to Sepolia...');
+
+    const tx = await mining.claim(
+      epoch,
+      BigInt(window.ktcNonce),
+      BigInt(deadline),
+      proofHash,
+      chosen
+    );
+
+    log(`Transaction sent: ${tx.hash}\nWaiting for confirmation...`);
+
+    const receipt = await tx.wait();
+
+    if (receipt.status !== 1) {
+      throw Error('Transaction reverted.');
+    }
+
+    log(
+      `Confirmed in block ${receipt.blockNumber}.\n` +
+      'KTC testnet reward claimed.'
+    );
+
+    $('claim').disabled = true;
+
+  } catch (e) {
+    log(e.shortMessage || e.message, true);
+  }
+};
+
+/* WALLET CHANGE HANDLING */
+if (window.ethereum?.on) {
+  window.ethereum.on('accountsChanged', () => {
+    stopMining();
+    location.reload();
+  });
+
+  window.ethereum.on('chainChanged', () => {
+    stopMining();
+    location.reload();
+  });
+}
+</script>
+
+<script>
+/* ==================================
+   KEYTOCOIN GOLD COIN RAIN BACKGROUND
+   ================================== */
+(() => {
+  const canvas = document.getElementById('ktcCoinRain');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const reducedMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  ).matches;
+
+  let width = 0;
+  let height = 0;
+  let coins = [];
+  let animationId = null;
+  let lastFrame = 0;
+
+  const coinCount = window.innerWidth < 600 ? 17 : 30;
+  const frameInterval = 1000 / 30;
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+
+    width = window.innerWidth;
+    height = window.innerHeight;
+
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    coins = Array.from({length: coinCount}, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      size: 10 + Math.random() * 10,
+      speed: 0.6 + Math.random() * 1.5,
+      drift: (Math.random() - 0.5) * 0.5,
+      angle: Math.random() * Math.PI * 2,
+      spin: 0.012 + Math.random() * 0.025,
+      opacity: 0.28 + Math.random() * 0.4
+    }));
+  }
+
+  function drawCoin(c) {
+    ctx.save();
+
+    ctx.translate(c.x, c.y);
+
+    const flip = Math.max(0.22, Math.abs(Math.cos(c.angle)));
+    ctx.scale(flip, 1);
+
+    ctx.globalAlpha = c.opacity;
+
+    ctx.shadowColor = '#e8ad35';
+    ctx.shadowBlur = 9;
+
+    const gold = ctx.createRadialGradient(
+      -c.size * 0.35,
+      -c.size * 0.35,
+      1,
+      0,
+      0,
+      c.size
+    );
+
+    gold.addColorStop(0, '#fff6b0');
+    gold.addColorStop(0.35, '#f5d36b');
+    gold.addColorStop(0.72, '#d99a24');
+    gold.addColorStop(1, '#80500b');
+
+    ctx.beginPath();
+    ctx.arc(0, 0, c.size, 0, Math.PI * 2);
+    ctx.fillStyle = gold;
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#ffe9a0';
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(0, 0, c.size * 0.76, 0, Math.PI * 2);
+    ctx.strokeStyle = '#fff0a6';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    /* KTC ALWAYS CENTERED */
+    ctx.fillStyle = '#563508';
+    ctx.font = `bold ${Math.max(7, c.size * 0.58)}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('KTC', 0, 0);
+
+    ctx.restore();
+  }
+
+  function animate(timestamp) {
+    animationId = requestAnimationFrame(animate);
+
+    if (timestamp - lastFrame < frameInterval) return;
+    lastFrame = timestamp;
+
+    ctx.clearRect(0, 0, width, height);
+
+    for (const c of coins) {
+      c.y += c.speed;
+      c.x += c.drift;
+      c.angle += c.spin;
+
+      if (c.y > height + c.size * 2) {
+        c.y = -c.size * 2;
+        c.x = Math.random() * width;
+      }
+
+      if (c.x < -c.size) c.x = width + c.size;
+      if (c.x > width + c.size) c.x = -c.size;
+
+      drawCoin(c);
+    }
+  }
+
+  function start() {
+    if (
+      reducedMotion ||
+      document.hidden ||
+      animationId !== null
+    ) return;
+
+    animationId = requestAnimationFrame(animate);
+  }
+
+  function stop() {
+    if (animationId !== null) {
+      cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stop();
+    else start();
+  });
+
+  window.addEventListener('resize', resize);
+
+  resize();
+  start();
+})();
+</script>
+
+</body>
+</html>
