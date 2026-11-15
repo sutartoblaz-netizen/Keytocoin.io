@@ -1,836 +1,389 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07110d">
-<title>KEYTOCOIN Testnet Miner</title>
-
-<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="./config.js"></script>
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#06120d">
+<title>KEYTOCOIN — ML-DSA-65 Wallet</title>
 <style>
-:root {
-  color-scheme: dark;
-  --green: #58e68b;
-  --gold: #e9bd55;
-  --border: #1f6b42;
-  --panel: rgba(13,28,21,.91);
-}
-
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: #07110d;
-  color: #d9ffe8;
-  font: 15px ui-monospace,monospace;
-  overflow-x: hidden;
-}
-
-#ktcCoinRain {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-}
-
-main {
-  position: relative;
-  z-index: 1;
-  max-width: 760px;
-  margin: auto;
-  padding: 20px 16px 40px;
-}
-
-header {
-  text-align: center;
-  padding: 20px 5px;
-}
-
-.logo {
-  color: var(--gold);
-  font-size: 38px;
-  font-weight: 900;
-  letter-spacing: 5px;
-  text-shadow: 0 0 18px #d99a2455;
-}
-
-.subtitle {
-  color: var(--green);
-  font-size: 11px;
-  letter-spacing: 3px;
-}
-
-.card {
-  background: var(--panel);
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px;
-  margin: 14px 0;
-  box-shadow: 0 5px 25px #0005;
-}
-
-.card-title {
-  color: var(--gold);
-  font-weight: bold;
-  margin-bottom: 8px;
-}
-
-.muted {
-  color: #91b6a0;
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-button, input, textarea {
-  font: inherit;
-  border-radius: 8px;
-  padding: 12px;
-  background: #10271b;
-  color: #d9ffe8;
-  border: 1px solid #28784b;
-  width: 100%;
-  margin: 7px 0;
-}
-
-button {
-  background: linear-gradient(120deg,#145c32,#198047);
-  font-weight: bold;
-  cursor: pointer;
-  transition: .2s;
-}
-
-button:active {
-  transform: scale(.98);
-}
-
-button:disabled {
-  opacity: .45;
-  cursor: not-allowed;
-}
-
-textarea {
-  resize: vertical;
-}
-
-pre {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  background: #06100b;
-  border: 1px solid #193c28;
-  padding: 12px;
-  border-radius: 8px;
-  color: #bce8ca;
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-.ok { color: #67ef9b; }
-.err { color: #ff8585; }
-
-label {
-  display: block;
-  margin-top: 10px;
-  color: #9ddbb4;
-  font-size: 12px;
-}
-
-.footer {
-  text-align: center;
-  padding: 20px 5px;
-  color: #789684;
-  font-size: 10px;
-  line-height: 1.7;
-}
-
-.status-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  background: #58e68b;
-  border-radius: 50%;
-  box-shadow: 0 0 8px #58e68b;
-  margin-right: 5px;
-}
-
-@media(max-width:480px) {
-  main { padding: 12px; }
-  .logo { font-size: 30px; }
-  .card { padding: 13px; }
-}
-
-@media(prefers-reduced-motion:reduce) {
-  * { scroll-behavior: auto !important; }
-}
+:root{--bg:#06120d;--panel:#0b2117;--gold:#f2c65d;--green:#55d69a;--muted:#9db4a7;--line:#254a37}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#153a27 0,#06120d 55%);color:#e6f4eb;font:15px ui-monospace,SFMono-Regular,Menlo,monospace;min-height:100vh}
+header{text-align:center;padding:24px 12px 12px;color:var(--gold);font-size:clamp(20px,4vw,30px);font-weight:900;text-shadow:0 0 16px #a87c28}
+main{width:min(1000px,94vw);margin:auto;padding:10px 0 40px}.sub{text-align:center;color:var(--muted);margin:0 0 20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.card{background:linear-gradient(145deg,#10291d,#08180f);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 10px 35px #0005}
+.card h2{font-size:15px;color:var(--gold);margin:0 0 14px}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.field{width:100%;background:#041009;border:1px solid var(--line);border-radius:7px;padding:10px;color:#dfffea;font:12px monospace;overflow-wrap:anywhere}
+.label{color:var(--muted);font-size:12px;margin:12px 0 5px}
+button{background:#163d29;color:#f6d47b;border:1px solid #467b56;border-radius:7px;padding:10px 12px;font:inherit;cursor:pointer;transition:all 0.2s ease}
+button:hover{filter:brightness(1.2);border-color:#55d69a}button.primary{background:linear-gradient(90deg,#76571a,#c79b36);color:#111;font-weight:bold}
+button.danger{border-color:#8e4545;color:#ffaaaa}button:disabled{opacity:.5;cursor:not-allowed}
+.metric{font-size:25px;color:var(--green);font-weight:bold;overflow-wrap:anywhere}.muted{color:var(--muted);font-size:12px}
+.status{padding:10px;border:1px solid var(--line);border-radius:7px;color:var(--green);font-size:12px;overflow-wrap:anywhere}
+.log{height:180px;overflow:auto;background:#020805;border:1px solid var(--line);padding:10px;border-radius:7px;font-size:12px;white-space:pre-wrap}
+.footer{text-align:center;color:var(--muted);font-size:11px;padding:20px}.hidden{display:none}
+input{accent-color:#55d69a}canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;opacity:.24;z-index:0}header,main,.sub{position:relative;z-index:1}
+.notice{border:1px solid #8e6b2e;color:#ffda8a;padding:10px;border-radius:8px;font-size:12px;margin:12px 0 16px}
 </style>
 </head>
-
 <body>
-
-<canvas id="ktcCoinRain" aria-hidden="true"></canvas>
-
+<canvas id="rain"></canvas>
+<header>🪙 KEYTOCOIN 🪙</header>
+<p class="sub">WALLET • TRANSACTIONS • CPU MINING • POST-QUANTUM</p>
 <main>
-
-<header>
-  <div class="logo">KEYTOCOIN</div>
-  <div class="subtitle">DECENTRALIZED CPU MINING</div>
-  <p class="muted">
-    <span class="status-dot"></span>
-    SEPOLIA TESTNET ONLY
-  </p>
-</header>
-
-<div class="card">
-  <div class="card-title">1. CONNECT WALLET</div>
-  <button id="connect">Connect MetaMask / EVM Wallet</button>
-  <pre id="wallet">Wallet not connected</pre>
+<div class="notice">ML-DSA-65 (NIST FIPS 204) runs securely in your browser via @noble/post-quantum. Ensure your KTC node is active and synchronized globally.</div>
+<div class="grid">
+<section class="card">
+<h2>ML-DSA-65 WALLET</h2>
+<div class="row"><button id="create">Create Wallet</button><button id="import">Import Backup</button><button id="export">Export Backup</button></div>
+<div class="label">Address (SHA3-256)</div><div id="address" class="field">No wallet created</div>
+<div class="label">Wallet Password</div><div class="row"><input id="password" type="password" autocomplete="current-password" placeholder="Password (at least 10 characters)" class="field" style="flex:1;min-width:150px"><button id="showKey">Show Key</button></div>
+<div id="keyview" class="field hidden"></div>
+<p class="muted">Private key is encrypted with AES-256-GCM in local browser storage. Keep your backup file safe offline.</p>
+</section>
+<section class="card">
+<h2>NETWORK STATUS</h2><div id="net" class="status">Checking global node...</div>
+<div class="label">Block Height</div><div id="height" class="metric">—</div>
+<div class="label">Total Minted / Max Supply (45,000,000)</div><div id="supply" class="field">—</div>
+<div class="label">Mempool</div><div id="mempool" class="field">—</div>
+</section>
+<section class="card">
+<h2>BALANCE</h2><div id="balance" class="metric">0 KTC</div>
+<div class="label">Mined Blocks</div><div id="mined" class="field">—</div>
+<div class="row" style="margin-top:14px"><button id="start" class="primary">Start Mining</button><button id="stop" class="danger">Stop Mining</button></div>
+<p class="muted">Mining process is handled by your global backend node.</p>
+</section>
+<section class="card">
+<h2>SEND KTC</h2><div class="label">Recipient Address (64 hexadecimal characters)</div>
+<input id="to" class="field" placeholder="Recipient address">
+<div class="label">Amount (KTC)</div><input id="amount" class="field" type="number" min="0.00000001" step="0.00000001" placeholder="0.0">
+<div class="row" style="margin-top:12px"><button id="send" class="primary">Sign &amp; Send</button></div>
+<p class="muted">Transactions are signed locally using the ML-DSA-65 standard.</p>
+</section>
+<section class="card">
+<h2>BLOCK EXPLORER</h2><button id="refresh">Refresh Blocks</button>
+<div id="blocks" class="log" style="margin-top:10px">Loading blocks...</div>
+</section>
+<section class="card"><h2>LOG</h2><div id="log" class="log">KEYTOCOIN / POST-QUANTUM WALLET (Global Ready)\nWaiting for initialization...</div></section>
 </div>
-
-<div class="card">
-  <div class="card-title">2. INDEPENDENT ATTESTORS</div>
-  <label>Masukkan minimal 3 URL HTTPS attestor independen</label>
-  <textarea id="urls" rows="4"
-    placeholder="https://attestor-1.example/attest&#10;https://attestor-2.example/attest&#10;https://attestor-3.example/attest"></textarea>
-  <p class="muted">
-    Setiap operator harus menjalankan server attestor sendiri.
-    Jangan gunakan beberapa URL yang dikendalikan operator yang sama.
-  </p>
-</div>
-
-<div class="card">
-  <div class="card-title">3. CPU PROOF OF WORK</div>
-  <button id="mine" disabled>START CPU MINING</button>
-  <button id="stopMine" disabled>STOP MINING</button>
-  <pre id="pow">Waiting for wallet...</pre>
-</div>
-
-<div class="card">
-  <div class="card-title">4. CLAIM MINING REWARD</div>
-  <button id="claim" disabled>
-    COLLECT 3-OF-5 ATTESTATIONS
-  </button>
-  <pre id="status">Connect wallet to begin.</pre>
-</div>
-
-<div class="card">
-  <div class="card-title">SECURITY NOTICE</div>
-  <p class="muted">
-    This is experimental testnet software. Verify the mining
-    contract address and network independently. Never enter
-    your seed phrase or private key into this application.
-    AI Security Core does not have wallet signing authority.
-  </p>
-</div>
-
-<div class="footer">
-  KEYTOCOIN COMMUNITY PROJECT<br>
-  EXPERIMENTAL SEPOLIA TESTNET<br>
-  NOT MAINNET • TEST TOKENS HAVE NO MONETARY VALUE
-</div>
-
+<div class="footer">KEYTOCOIN • SHA-256 PoW • SHA3-256 ADDRESS • ML-DSA-65 • NIST FIPS 204</div>
 </main>
+<script type="module">
+import { ml_dsa65 } from 'https://esm.sh/@noble/post-quantum@0.7.0/ml-dsa.js';
+import { sha3_256 } from 'https://esm.sh/@noble/hashes@2.0.1/sha3.js';
 
-<script>
-/* TELEGRAM MINI APP */
-window.Telegram?.WebApp?.ready();
-window.Telegram?.WebApp?.expand();
-
-/* APP STATE */
 const $ = id => document.getElementById(id);
+const SCALE = 100000000;
+const encoder = new TextEncoder();
+let wallet = null, secretKey = null, showing = false;
 
-let provider;
-let walletProvider;
-let signer;
-let wallet;
-let mining;
-let epoch;
-let nonce;
-let proofHash;
-let deadline;
-let worker;
-let workerUrl;
+// KONFIGURASI GLOBAL API NODE:
+// Jika dibuka langsung dari VPS, gunakan window.location.origin (otomatis mendeteksi IP/Domain & Port server).
+// Jika diuji lokal, otomatis fallback ke http://localhost:3000
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+  ? 'http://localhost:3000' 
+  : window.location.origin;
 
-const ABI = [
-  'function currentEpoch() view returns(uint256)',
-  'function nonces(address) view returns(uint256)',
-  'function calculateProof(address,uint256,uint256) view returns(bytes32)',
-  'function powTarget() view returns(uint256)',
-  'function claim(uint256,uint256,uint256,bytes32,bytes[])'
-];
+const hex = bytes => Array.from(bytes, b => b.toString(16).padStart(2,'0')).join('');
+const unhex = s => {
+  if (typeof s !== 'string' || !/^(?:[0-9a-f]{2})+$/i.test(s)) throw Error('Invalid hexadecimal data');
+  return Uint8Array.from(s.match(/.{2}/g), x => parseInt(x,16));
+};
+const b64 = bytes => {
+  let out = ''; for (const b of bytes) out += String.fromCharCode(b);
+  return btoa(out);
+};
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 
-const CHAIN = '0xaa36a7';
-
-let addr = localStorage.getItem('KTC_MINING_ADDRESS');
-
-if (!addr) {
-  addr = prompt(
-    'Paste verified KTC mining contract address (Sepolia):',
-    ''
+function log(s) {
+  $('log').textContent += `\n[${new Date().toLocaleTimeString()}] ${s}`;
+  $('log').scrollTop = $('log').scrollHeight;
+}
+function canonicalTransaction(tx) {
+  const signed = {
+    amount: tx.amount,
+    from: tx.from,
+    nonce: tx.nonce,
+    public_key: tx.public_key,
+    timestamp: tx.timestamp,
+    to: tx.to
+  };
+  return encoder.encode(JSON.stringify(signed));
+}
+async function derive(pass, salt) {
+  const base = await crypto.subtle.importKey('raw', encoder.encode(pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt, iterations:310000, hash:'SHA-256'},
+    base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']
   );
-
-  if (addr) {
-    try {
-      addr = ethers.getAddress(addr);
-      localStorage.setItem('KTC_MINING_ADDRESS', addr);
-    } catch {
-      alert('Invalid contract address.');
-      addr = null;
-    }
-  }
 }
-
-function log(message, error = false) {
-  $('status').textContent = message;
-  $('status').className = error ? 'err' : 'ok';
+async function encryptSecret(raw, pass) {
+  if (!pass || pass.length < 10) throw Error('Password must be at least 10 characters');
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await derive(pass, salt);
+  const cipher = await crypto.subtle.encrypt({name:'AES-GCM',iv}, key, raw);
+  return {v:1, kdf:'PBKDF2-SHA256-310000', cipher:'AES-256-GCM', salt:b64(salt), iv:b64(iv), data:b64(new Uint8Array(cipher))};
 }
-
-/* CONNECT WALLET */
-async function connect() {
-  if (!addr) throw Error('Configure a verified mining contract address.');
-
-  if (!walletProvider) {
-    if (window.ethereum) {
-      walletProvider = window.ethereum;
-    } else {
-      const projectId = window.KTC_CONFIG?.walletConnectProjectId;
-
-      if (!projectId || projectId.includes('PASTE_')) {
-        throw Error('Configure WalletConnect project ID in config.js.');
-      }
-
-      const EthereumProvider =
-        (await import(
-          'https://esm.sh/@walletconnect/ethereum-provider@2.17.0'
-        )).default;
-
-      walletProvider = await EthereumProvider.init({
-        projectId,
-        chains: [11155111],
-        showQrModal: true,
-        methods: [
-          'eth_chainId',
-          'eth_accounts',
-          'eth_requestAccounts',
-          'eth_sendTransaction',
-          'personal_sign',
-          'eth_signTypedData_v4',
-          'wallet_switchEthereumChain'
-        ],
-        events: ['chainChanged', 'accountsChanged'],
-        metadata: {
-          name: 'KEYTOCOIN Testnet Miner',
-          description: 'KEYTOCOIN Sepolia CPU mining',
-          url: location.origin,
-          icons: []
-        }
-      });
-
-      await walletProvider.connect();
-    }
-  }
-
-  provider = new ethers.BrowserProvider(walletProvider);
-
-  await provider.send('eth_requestAccounts', []);
-
-  let net = await provider.getNetwork();
-
-  if (net.chainId !== 11155111n) {
-    await walletProvider.request({
-      method: 'wallet_switchEthereumChain',
-      params: [{ chainId: CHAIN }]
-    });
-
-    provider = new ethers.BrowserProvider(walletProvider);
-    net = await provider.getNetwork();
-  }
-
-  if (net.chainId !== 11155111n) {
-    throw Error('Please switch to Sepolia network.');
-  }
-
-  signer = await provider.getSigner();
-  wallet = await signer.getAddress();
-
-  mining = new ethers.Contract(
-    ethers.getAddress(addr),
-    ABI,
-    signer
-  );
-
-  $('wallet').textContent =
-    `${wallet}\nChain ID: 11155111\nMining: ${addr}`;
-
-  $('mine').disabled = false;
-
-  log('Wallet connected. Confirm Sepolia test ETH is available.');
+async function decryptSecret(obj, pass) {
+  if (!obj || obj.v !== 1 || obj.cipher !== 'AES-256-GCM') throw Error('Unrecognized encrypted wallet format');
+  const key = await derive(pass, unb64(obj.salt));
+  return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(obj.iv)}, key, unb64(obj.data)));
 }
-
-$('connect').onclick = () =>
-  connect().catch(e => log(e.message, true));
-
-/* CPU MINING WORKER */
-function stopMining() {
-  if (worker) {
-    worker.terminate();
-    worker = null;
-  }
-
-  if (workerUrl) {
-    URL.revokeObjectURL(workerUrl);
-    workerUrl = null;
-  }
-
-  $('mine').disabled = !mining;
-  $('stopMine').disabled = true;
+async function api(path, body) {
+  const response = await fetch(API_BASE + path, {
+    method: body === undefined ? 'GET' : 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw Error(data.error || `HTTP ${response.status}`);
+  return data;
 }
+function currentAddress(publicKey) { return hex(sha3_256(publicKey)); }
 
-$('stopMine').onclick = () => {
-  stopMining();
-  $('pow').textContent = 'Mining stopped.';
-};
-
-$('mine').onclick = async () => {
+async function loadWallet() {
+  const raw = localStorage.getItem('ktc_wallet_mldsa65_v1');
+  if (!raw) return;
+  wallet = JSON.parse(raw);
+  if (wallet.algorithm !== 'ML-DSA-65') throw Error('Wallet is not ML-DSA-65');
+  $('address').textContent = wallet.address;
+}
+async function unlock() {
+  if (!wallet) throw Error('Create or import a wallet first');
+  if (wallet.algorithm !== 'ML-DSA-65') throw Error('Wallet algorithm mismatch');
+  const pass = $('password').value;
+  if (!pass) throw Error('Enter your wallet password');
+  secretKey = await decryptSecret(wallet.secret, pass);
+  if (secretKey.length !== 4032) throw Error('Invalid ML-DSA-65 secret-key length');
+  const derivedPublic = ml_dsa65.getPublicKey(secretKey);
+  if (hex(derivedPublic) !== wallet.public_key) throw Error('Private key does not match the public key');
+  return secretKey;
+}
+async function createWallet() {
+  const pass = $('password').value;
+  if (pass.length < 10) throw Error('Enter a password of at least 10 characters first');
+  const keys = ml_dsa65.keygen();
+  const address = currentAddress(keys.publicKey);
+  const result = await api('/api/address', {public_key:hex(keys.publicKey), algorithm:'ML-DSA-65'});
+  if (result.address !== address) throw Error('Node address does not match SHA3-256 of the public key');
+  wallet = {
+    version:1, algorithm:'ML-DSA-65', address,
+    public_key:hex(keys.publicKey),
+    secret:await encryptSecret(keys.secretKey, pass)
+  };
+  localStorage.setItem('ktc_wallet_mldsa65_v1', JSON.stringify(wallet));
+  secretKey = keys.secretKey;
+  $('address').textContent = address;
+  $('keyview').classList.add('hidden'); $('keyview').textContent=''; showing=false; $('showKey').textContent='Show Key';
+  log('ML-DSA-65 wallet created successfully.');
+  await refresh();
+}
+async function importWallet() {
+  const raw = prompt('Paste the KEYTOCOIN ML-DSA-65 backup JSON:');
+  if (!raw) return;
+  const backup = JSON.parse(raw);
+  if (backup.algorithm !== 'ML-DSA-65' || !backup.address || !backup.public_key || !backup.secret_key)
+    throw Error('Backup must contain algorithm, address, public_key, and secret_key for ML-DSA-65');
+  const pub = unhex(backup.public_key), sk = unhex(backup.secret_key);
+  if (pub.length !== 1952 || sk.length !== 4032) throw Error('Invalid ML-DSA-65 key size');
+  if (currentAddress(pub) !== backup.address) throw Error('Backup address does not match');
+  if (hex(ml_dsa65.getPublicKey(sk)) !== hex(pub)) throw Error('Public/private key pair does not match');
+  const pass = $('password').value;
+  if (pass.length < 10) throw Error('New password must be at least 10 characters');
+  const node = await api('/api/address', {public_key:hex(pub), algorithm:'ML-DSA-65'});
+  if (node.address !== backup.address) throw Error('Address returned by the node does not match');
+  wallet = {version:1, algorithm:'ML-DSA-65', address:backup.address, public_key:backup.public_key, secret:await encryptSecret(sk,pass)};
+  localStorage.setItem('ktc_wallet_mldsa65_v1', JSON.stringify(wallet));
+  secretKey = sk; $('address').textContent = wallet.address;
+  log('ML-DSA-65 wallet imported successfully.');
+  await refresh();
+}
+async function exportWallet() {
+  await unlock();
+  const backup = {
+    network:'KTC',
+    algorithm:'ML-DSA-65',
+    address:wallet.address,
+    public_key:wallet.public_key,
+    secret_key:hex(secretKey)
+  };
+  const blob = new Blob([JSON.stringify(backup,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='keytocoin-mldsa65-backup.json'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  log('ML-DSA-65 backup exported safely.');
+}
+async function signTransaction(tx) {
+  await unlock();
+  return hex(ml_dsa65.sign(canonicalTransaction(tx), secretKey));
+}
+async function refresh() {
   try {
-    if (!mining) await connect();
-
-    stopMining();
-
-    $('claim').disabled = true;
-    proofHash = null;
-
-    epoch = await mining.currentEpoch();
-    nonce = await mining.nonces(wallet);
-
-    const target = await mining.powTarget();
-    const chain = await provider.getNetwork();
-
-    const workerCode = `
-      importScripts(
-        'https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js'
-      );
-
-      onmessage = e => {
-        const {
-          chainId, contract, wallet, epoch, nonce, target
-        } = e.data;
-
-        let n = BigInt(nonce);
-        const max = BigInt(target);
-        const coder = ethers.AbiCoder.defaultAbiCoder();
-
-        function go() {
-          for (let i = 0; i < 5000; i++, n++) {
-            const enc = coder.encode(
-              ['uint256','address','address','uint256','uint256'],
-              [chainId,contract,wallet,epoch,n]
-            );
-
-            const h = ethers.keccak256(enc);
-
-            if (BigInt(h) <= max) {
-              postMessage({
-                found: true,
-                nonce: n.toString(),
-                hash: h
-              });
-              return;
-            }
-          }
-
-          postMessage({progress:n.toString()});
-          setTimeout(go, 0);
-        }
-
-        go();
-      };
-    `;
-
-    const blob = new Blob(
-      [workerCode],
-      { type: 'text/javascript' }
-    );
-
-    workerUrl = URL.createObjectURL(blob);
-    worker = new Worker(workerUrl);
-
-    $('mine').disabled = true;
-    $('stopMine').disabled = false;
-
-    $('pow').textContent =
-      `Mining epoch ${epoch}, wallet nonce ${nonce}...`;
-
-    worker.onmessage = e => {
-      if (e.data.found) {
-        proofHash = e.data.hash;
-        window.ktcNonce = e.data.nonce;
-
-        $('pow').textContent =
-          `PROOF FOUND\nnonce=${e.data.nonce}\nhash=${proofHash}`;
-
-        $('claim').disabled = false;
-
-        stopMining();
-      } else {
-        $('pow').textContent =
-          `Trying nonce ${e.data.progress}...`;
-      }
-    };
-
-    worker.onerror = e => {
-      stopMining();
-      $('pow').textContent = 'Mining worker error: ' + e.message;
-    };
-
-    worker.postMessage({
-      chainId: chain.chainId.toString(),
-      contract: ethers.getAddress(addr),
-      wallet,
-      epoch: epoch.toString(),
-      nonce: nonce.toString(),
-      target: target.toString()
-    });
-
-  } catch (e) {
-    stopMining();
-    log(e.message, true);
+    const s = await api('/api/status');
+    $('net').textContent = `${s.network} • chain valid: ${s.chain_valid} • mining: ${s.mining}`;
+    $('height').textContent = s.height;
+    $('supply').textContent = `${(s.minted/SCALE).toLocaleString()} / ${(s.max_supply/SCALE).toLocaleString()} KTC`;
+    $('mempool').textContent = `${s.mempool} transactions`;
+    if (wallet) {
+      const b = await api('/api/balance/'+encodeURIComponent(wallet.address));
+      $('balance').textContent = (b.balance/SCALE).toLocaleString(undefined,{maximumFractionDigits:8})+' KTC';
+      $('mined').textContent = b.mined_blocks ?? 'Node did not provide mined blocks data';
+    }
+    const x = await api('/api/blocks');
+    $('blocks').textContent = (x.blocks||[]).slice().reverse().map(b =>
+      `#${b.index} ${b.hash}\nprev ${b.previous_hash}\nnonce ${b.nonce} • tx ${(b.transactions||[]).length}`
+    ).join('\n\n') || 'No blocks yet';
+  } catch(e) {
+    $('net').textContent = 'Global node unavailable: '+e.message;
   }
-};
-
-/* CLAIM REWARD */
-$('claim').onclick = async () => {
-  try {
-    if (!mining || !signer) {
-      throw Error('Connect wallet first.');
-    }
-
-    if (!proofHash || !window.ktcNonce) {
-      throw Error('Mine a valid proof first.');
-    }
-
-    const tg = window.Telegram?.WebApp;
-    const initData = tg?.initData || '';
-
-    if (!initData) {
-      throw Error('Open this Mini App from Telegram.');
-    }
-
-    const params = new URLSearchParams(initData);
-
-    let tgUser;
-
-    try {
-      tgUser = JSON.parse(params.get('user') || 'null');
-    } catch {}
-
-    if (!tgUser?.id) {
-      throw Error('Telegram user ID unavailable.');
-    }
-
-    const urls = $('urls').value
-      .split(/\n/)
-      .map(x => x.trim())
-      .filter(Boolean);
-
-    if (urls.length < 3) {
-      throw Error('Enter at least 3 independent attestor URLs.');
-    }
-
-    for (const url of urls) {
-      const parsed = new URL(url);
-
-      if (parsed.protocol !== 'https:') {
-        throw Error('All attestor URLs must use HTTPS.');
-      }
-    }
-
-    deadline = Math.floor(Date.now() / 1000) + 240;
-
-    const message = [
-      'KEYTOCOIN TESTNET MINING CLAIM',
-      'Chain ID: 11155111',
-      `Mining contract: ${ethers.getAddress(addr)}`,
-      `Wallet: ${wallet}`,
-      `Telegram user ID: ${tgUser.id}`,
-      `Epoch: ${epoch}`,
-      `Nonce: ${window.ktcNonce}`,
-      `Proof hash: ${proofHash}`,
-      `Deadline: ${deadline}`,
-      'This signature links this Telegram account to this wallet for this claim only.',
-      'It does not authorize token transfers.'
-    ].join('\n');
-
-    const walletSignature = await signer.signMessage(message);
-
-    log('Requesting independent attestations...');
-
-    const payload = {
-      initData,
-      wallet,
-      walletSignature,
-      epoch: epoch.toString(),
-      nonce: String(window.ktcNonce),
-      deadline,
-      proofHash
-    };
-
-    const results = await Promise.allSettled(
-      urls.map(async url => {
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || !result.ok) {
-          throw Error(
-            result.error || `Attestor HTTP ${response.status}`
-          );
-        }
-
-        return result;
-      })
-    );
-
-    const good = results
-      .filter(x => x.status === 'fulfilled')
-      .map(x => x.value);
-
-    if (good.length < 3) {
-      throw Error(
-        `Only ${good.length} attestor(s) approved. Need 3.`
-      );
-    }
-
-    const signatures = good.map(x => ({
-      address: ethers.getAddress(x.attestor),
-      signature: x.signature
-    })).sort((a, b) =>
-      a.address.toLowerCase().localeCompare(
-        b.address.toLowerCase()
-      )
-    );
-
-    const unique = new Set(
-      signatures.map(x => x.address.toLowerCase())
-    );
-
-    if (unique.size < 3) {
-      throw Error('Duplicate attestor signer identities.');
-    }
-
-    const chosen = signatures
-      .slice(0, 3)
-      .map(x => x.signature);
-
-    log('Submitting claim transaction to Sepolia...');
-
-    const tx = await mining.claim(
-      epoch,
-      BigInt(window.ktcNonce),
-      BigInt(deadline),
-      proofHash,
-      chosen
-    );
-
-    log(`Transaction sent: ${tx.hash}\nWaiting for confirmation...`);
-
-    const receipt = await tx.wait();
-
-    if (receipt.status !== 1) {
-      throw Error('Transaction reverted.');
-    }
-
-    log(
-      `Confirmed in block ${receipt.blockNumber}.\n` +
-      'KTC testnet reward claimed.'
-    );
-
-    $('claim').disabled = true;
-
-  } catch (e) {
-    log(e.shortMessage || e.message, true);
-  }
-};
-
-/* WALLET CHANGE HANDLING */
-if (window.ethereum?.on) {
-  window.ethereum.on('accountsChanged', () => {
-    stopMining();
-    location.reload();
-  });
-
-  window.ethereum.on('chainChanged', () => {
-    stopMining();
-    location.reload();
-  });
 }
-</script>
 
-<script>
-/* ==================================
-   KEYTOCOIN GOLD COIN RAIN BACKGROUND
-   ================================== */
-(() => {
-  const canvas = document.getElementById('ktcCoinRain');
-  if (!canvas) return;
-
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  const reducedMotion = window.matchMedia(
-    '(prefers-reduced-motion: reduce)'
-  ).matches;
-
-  let width = 0;
-  let height = 0;
-  let coins = [];
-  let animationId = null;
-  let lastFrame = 0;
-
-  const coinCount = window.innerWidth < 600 ? 17 : 30;
-  const frameInterval = 1000 / 30;
-
-  function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-
-    width = window.innerWidth;
-    height = window.innerHeight;
-
-    canvas.width = Math.round(width * dpr);
-    canvas.height = Math.round(height * dpr);
-
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    coins = Array.from({length: coinCount}, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      size: 10 + Math.random() * 10,
-      speed: 0.6 + Math.random() * 1.5,
-      drift: (Math.random() - 0.5) * 0.5,
-      angle: Math.random() * Math.PI * 2,
-      spin: 0.012 + Math.random() * 0.025,
-      opacity: 0.28 + Math.random() * 0.4
-    }));
-  }
-
-  function drawCoin(c) {
-    ctx.save();
-
-    ctx.translate(c.x, c.y);
-
-    const flip = Math.max(0.22, Math.abs(Math.cos(c.angle)));
-    ctx.scale(flip, 1);
-
-    ctx.globalAlpha = c.opacity;
-
-    ctx.shadowColor = '#e8ad35';
-    ctx.shadowBlur = 9;
-
-    const gold = ctx.createRadialGradient(
-      -c.size * 0.35,
-      -c.size * 0.35,
-      1,
-      0,
-      0,
-      c.size
-    );
-
-    gold.addColorStop(0, '#fff6b0');
-    gold.addColorStop(0.35, '#f5d36b');
-    gold.addColorStop(0.72, '#d99a24');
-    gold.addColorStop(1, '#80500b');
-
-    ctx.beginPath();
-    ctx.arc(0, 0, c.size, 0, Math.PI * 2);
-    ctx.fillStyle = gold;
-    ctx.fill();
-
-    ctx.shadowBlur = 0;
-
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = '#ffe9a0';
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(0, 0, c.size * 0.76, 0, Math.PI * 2);
-    ctx.strokeStyle = '#fff0a6';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    /* KTC ALWAYS CENTERED */
-    ctx.fillStyle = '#563508';
-    ctx.font = `bold ${Math.max(7, c.size * 0.58)}px monospace`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('KTC', 0, 0);
-
-    ctx.restore();
-  }
-
-  function animate(timestamp) {
-    animationId = requestAnimationFrame(animate);
-
-    if (timestamp - lastFrame < frameInterval) return;
-    lastFrame = timestamp;
-
-    ctx.clearRect(0, 0, width, height);
-
-    for (const c of coins) {
-      c.y += c.speed;
-      c.x += c.drift;
-      c.angle += c.spin;
-
-      if (c.y > height + c.size * 2) {
-        c.y = -c.size * 2;
-        c.x = Math.random() * width;
-      }
-
-      if (c.x < -c.size) c.x = width + c.size;
-      if (c.x > width + c.size) c.x = -c.size;
-
-      drawCoin(c);
+$('create').onclick = () => createWallet().catch(e=>log('ERROR: '+e.message));
+$('import').onclick = () => importWallet().catch(e=>log('ERROR: '+e.message));
+$('export').onclick = () => exportWallet().catch(e=>log('ERROR: '+e.message));
+$('showKey').onclick = async () => {
+  try {
+    if (showing) {
+      $('keyview').classList.add('hidden'); $('keyview').textContent='';
+      $('showKey').textContent='Show Key'; showing=false; return;
     }
-  }
+    await unlock();
+    $('keyview').textContent = hex(secretKey);
+    $('keyview').classList.remove('hidden'); $('showKey').textContent='Hide Key'; showing=true;
+    log('Secret key displayed.');
+  } catch(e) { log('ERROR: '+e.message); }
+};
+$('start').onclick = async () => {
+  try {
+    if (!wallet) throw Error('Create or import a wallet first');
+    const r=await api('/api/mine/start',{address:wallet.address});
+    log(r.note||'Mining started'); await refresh();
+  } catch(e) { log('ERROR: '+e.message); }
+};
+$('stop').onclick = async () => {
+  try { await api('/api/mine/stop',{}); log('Mining stopped'); await refresh(); }
+  catch(e) { log('ERROR: '+e.message); }
+};
+$('send').onclick = async () => {
+  try {
+    await unlock();
+    const to=$('to').value.trim().toLowerCase(), amount=Number($('amount').value);
+    if (!/^[0-9a-f]{64}$/.test(to)) throw Error('Recipient address must be 64 hexadecimal characters');
+    const amountUnits = Math.round(amount * SCALE);
+    if (!Number.isFinite(amount) || amount<=0 || !Number.isSafeInteger(amountUnits) || amountUnits<=0)
+      throw Error('Invalid KTC amount');
+    const bal=await api('/api/balance/'+encodeURIComponent(wallet.address));
+    const tx={
+      type:'transfer', from:wallet.address, to,
+      amount:amountUnits, nonce:bal.nonce,
+      timestamp:Math.floor(Date.now()/1000), public_key:wallet.public_key
+    };
+    tx.signature=await signTransaction(tx);
+    const result=await api('/api/tx',tx);
+    log('Transaction submitted globally: '+(result.txid||'Accepted'));
+    await refresh();
+  } catch(e) { log('ERROR: '+e.message); }
+};
+$('refresh').onclick = () => refresh().then(()=>log('Explorer refreshed'));
 
-  function start() {
-    if (
-      reducedMotion ||
-      document.hidden ||
-      animationId !== null
-    ) return;
-
-    animationId = requestAnimationFrame(animate);
-  }
-
-  function stop() {
-    if (animationId !== null) {
-      cancelAnimationFrame(animationId);
-      animationId = null;
-    }
-  }
-
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) stop();
-    else start();
-  });
-
-  window.addEventListener('resize', resize);
-
-  resize();
-  start();
+(async()=>{
+  try {
+    await loadWallet();
+    log(`ML-DSA-65 wallet UI initialized. Connected to: ${API_BASE}`);
+    await refresh();
+  } catch(e) { log('INITIALIZATION ERROR: '+e.message); }
 })();
-</script>
+setInterval(refresh,5000);
 
+const c = $('rain');
+const ctx = c.getContext('2d');
+let coins = [];
+
+function makeCoin(startAnywhere = false) {
+  const r = 13 + Math.random() * 12;
+  return {
+    x: Math.random() * innerWidth,
+    y: startAnywhere ? Math.random() * innerHeight : -r * 2,
+    r,
+    speed: 1.1 + Math.random() * 2.5,
+    drift: (Math.random() - 0.5) * 0.8,
+    spin: (Math.random() - 0.5) * 0.035,
+    angle: Math.random() * Math.PI * 2,
+    alpha: 0.45 + Math.random() * 0.45
+  };
+}
+function resizeCoinRain() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  c.width = Math.floor(innerWidth * dpr);
+  c.height = Math.floor(innerHeight * dpr);
+  c.style.width = innerWidth + 'px';
+  c.style.height = innerHeight + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const count = Math.max(12, Math.min(42, Math.floor(innerWidth / 24)));
+  coins = Array.from({length: count}, () => makeCoin(true));
+}
+function drawGoldKtcCoin(coin) {
+  ctx.save();
+  ctx.globalAlpha = coin.alpha;
+  ctx.translate(coin.x, coin.y);
+  ctx.rotate(coin.angle);
+
+  ctx.shadowColor = 'rgba(242,198,93,.55)';
+  ctx.shadowBlur = 12;
+  const gold = ctx.createRadialGradient(
+    -coin.r * .35, -coin.r * .4, coin.r * .08,
+    0, 0, coin.r * 1.15
+  );
+  gold.addColorStop(0, '#fff2ad');
+  gold.addColorStop(.28, '#f8d978');
+  gold.addColorStop(.68, '#d99d2e');
+  gold.addColorStop(1, '#805515');
+
+  ctx.beginPath();
+  ctx.arc(0, 0, coin.r, 0, Math.PI * 2);
+  ctx.fillStyle = '#8c641d';
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(0, 0, coin.r * .88, 0, Math.PI * 2);
+  ctx.fillStyle = gold;
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+  ctx.lineWidth = Math.max(1, coin.r * .055);
+  ctx.strokeStyle = '#fff0a0';
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(0, 0, coin.r * .72, 0, Math.PI * 2);
+  ctx.lineWidth = Math.max(1, coin.r * .045);
+  ctx.strokeStyle = 'rgba(117,75,13,.8)';
+  ctx.stroke();
+
+  ctx.fillStyle = '#70470d';
+  ctx.font = `900 ${Math.max(9, coin.r * .53)}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('KTC', 0, 1);
+  ctx.restore();
+}
+function animateCoinRain() {
+  ctx.clearRect(0, 0, innerWidth, innerHeight);
+  for (const coin of coins) {
+    drawGoldKtcCoin(coin);
+    coin.y += coin.speed;
+    coin.x += coin.drift;
+    coin.angle += coin.spin;
+    if (coin.y - coin.r > innerHeight) Object.assign(coin, makeCoin(false));
+    if (coin.x < -coin.r) coin.x = innerWidth + coin.r;
+    if (coin.x > innerWidth + coin.r) coin.x = -coin.r;
+  }
+  requestAnimationFrame(animateCoinRain);
+}
+window.addEventListener('resize', resizeCoinRain);
+resizeCoinRain();
+requestAnimationFrame(animateCoinRain);
+</script>
 </body>
 </html>
